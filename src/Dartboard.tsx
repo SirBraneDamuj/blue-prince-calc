@@ -1,9 +1,11 @@
-import React, { useReducer } from "react";
+import React, { useMemo, useReducer } from "react";
+import { computeValue } from "./calculator";
 import { DartboardSvg } from "./DartboardSvg";
 import { initialState, reducer } from "./reducer";
 
 const Dartboard: React.FC = () => {
-  const [{ wedges, center }, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { wedges, center } = state;
   function onWedgeSectionClick(
     wedgeNumber: number,
     wedgeSection: "double" | "outer" | "triple" | "inner"
@@ -23,6 +25,14 @@ const Dartboard: React.FC = () => {
       type: "NEXT_CENTER_WEDGE_OPERATOR",
     });
   }
+  const value = useMemo(() => {
+    try {
+      return computeValue(state);
+    } catch (error) {
+      console.error("Error computing value:", error);
+      return -1;
+    }
+  }, [state]);
   return (
     <div>
       <DartboardSvg
@@ -42,6 +52,7 @@ const Dartboard: React.FC = () => {
       >
         Clear
       </button>
+      <h1>Value: {value}</h1>
     </div>
   );
 };

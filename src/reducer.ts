@@ -159,6 +159,7 @@ function handleCenterOperatorCycleAction(
       ? nextCenterOperator
       : previousCenterOperator;
   const newCenterOperator = newCenterOperatorFn(state.center?.operator || null);
+  console.log(state.center?.operator, newCenterOperator);
   if (newCenterOperator === null) {
     return {
       ...state,

@@ -23,7 +23,8 @@ export function DartboardSvg({
   onCenterClick,
 }: DartboardSvgProps) {
   const numbers = [
-    20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
+    20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6, 13, 4, 18, 1,
+    // 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
   ];
   const numberAngles = [
     0, 18, 36, 54, 72, 90, 108, 126, 144, 162, 180, 198, 216, 234, 252, 270,
@@ -47,6 +48,7 @@ export function DartboardSvg({
 
   const wedgeSectionClickHandler =
     (number: number, section: WedgeSection) => () => {
+      console.log("clicked", number, section);
       onWedgeSectionClick(number - 1, section);
     };
 
@@ -101,7 +103,7 @@ export function DartboardSvg({
     );
   });
   return (
-    <svg id="svg2" width={800} viewBox="-250 -250 500 500" version="1.0">
+    <svg id="svg2" width={600} viewBox="-250 -250 500 500" version="1.0">
       <defs id="defs6">
         <line
           id="refwire"
@@ -210,6 +212,39 @@ export function DartboardSvg({
               transform="rotate(45)"
               onClick={onCenterClick}
             />
+          )}
+          {(center?.operator === "round1" || center?.operator === "round3") && (
+            <path
+              fill="none"
+              stroke={"#000"}
+              strokeWidth={1}
+              d="M -8,-0
+  Q -4,8, 0,-0
+  Q 4,-8, 8,-0"
+              onClick={onCenterClick}
+            />
+          )}
+          {(center?.operator === "round2" || center?.operator === "round3") && (
+            <>
+              <path
+                fill="none"
+                stroke={"#000"}
+                strokeWidth={1}
+                d="M -8,4
+                  Q -4,12, 0,4
+                  Q 4,-4, 8,4"
+                onClick={onCenterClick}
+              />
+              <path
+                fill="none"
+                stroke={"#000"}
+                strokeWidth={1}
+                d="M -8,-4
+                  Q -4,4, 0,-4
+                  Q 4,-12, 8,-4"
+                onClick={onCenterClick}
+              />
+            </>
           )}
         </g>
       </g>
