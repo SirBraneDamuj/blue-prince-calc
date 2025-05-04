@@ -13,12 +13,24 @@ const Dartboard: React.FC = () => {
       payload: { wedgeNumber, wedgeSection },
     });
   }
+  function onCenterClick() {
+    dispatch({
+      type: "NEXT_CENTER_OPERATOR",
+    });
+  }
+  function onCenterRingClick() {
+    dispatch({
+      type: "NEXT_CENTER_WEDGE_OPERATOR",
+    });
+  }
   return (
     <div>
       <DartboardSvg
         wedges={wedges}
         center={center}
         onWedgeSectionClick={onWedgeSectionClick}
+        onCenterClick={onCenterClick}
+        onCenterRingClick={onCenterRingClick}
       />
       <br />
       <button

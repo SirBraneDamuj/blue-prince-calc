@@ -1,4 +1,10 @@
-import { Center, Wedge, WedgeOperator, WedgeSection } from "./types";
+import {
+  Center,
+  CenterOperator,
+  Wedge,
+  WedgeOperator,
+  WedgeSection,
+} from "./types";
 
 export type DartboardState = {
   wedges: Wedge[];
@@ -35,7 +41,19 @@ type ClearAction = {
   type: "CLEAR";
 };
 
-export type Actions = WedgeOperatorCycleActions | ClearAction;
+type CenterOperatorCycleActions = {
+  type: "NEXT_CENTER_OPERATOR" | "PREVIOUS_CENTER_OPERATOR";
+};
+
+type CenterWedgeOperatorCycleActions = {
+  type: "NEXT_CENTER_WEDGE_OPERATOR" | "PREVIOUS_CENTER_WEDGE_OPERATOR";
+};
+
+export type Actions =
+  | WedgeOperatorCycleActions
+  | ClearAction
+  | CenterOperatorCycleActions
+  | CenterWedgeOperatorCycleActions;
 
 function nextWedgeOperator(
   currentOperator: WedgeOperator | null
@@ -71,6 +89,44 @@ function previousWedgeOperator(
   }
 }
 
+function nextCenterOperator(
+  currentOperator: CenterOperator | null
+): CenterOperator | null {
+  switch (currentOperator) {
+    case "square":
+      return "flip";
+    case "flip":
+      return "round1";
+    case "round1":
+      return "round2";
+    case "round2":
+      return "round3";
+    case "round3":
+      return null;
+    default:
+      return "square";
+  }
+}
+
+function previousCenterOperator(
+  currentOperator: CenterOperator | null
+): CenterOperator | null {
+  switch (currentOperator) {
+    case "square":
+      return null;
+    case "flip":
+      return "square";
+    case "round1":
+      return "flip";
+    case "round2":
+      return "round1";
+    case "round3":
+      return "round2";
+    default:
+      return null;
+  }
+}
+
 function handleWedgeOperatorCycleAction(
   state: DartboardState,
   action: WedgeOperatorCycleActions
@@ -94,11 +150,73 @@ function handleWedgeOperatorCycleAction(
   };
 }
 
+function handleCenterOperatorCycleAction(
+  state: DartboardState,
+  action: CenterOperatorCycleActions
+): DartboardState {
+  const newCenterOperatorFn =
+    action.type === "NEXT_CENTER_OPERATOR"
+      ? nextCenterOperator
+      : previousCenterOperator;
+  const newCenterOperator = newCenterOperatorFn(state.center?.operator || null);
+  if (newCenterOperator === null) {
+    return {
+      ...state,
+      center: null,
+    };
+  }
+  const newCenter = {
+    ...(state.center || {}),
+    operator: newCenterOperator,
+    wedgeOperator: state.center ? state.center.wedgeOperator : "add",
+  };
+  return {
+    ...state,
+    center: newCenter,
+  };
+}
+
+function handleCenterWedgeOperatorCycleAction(
+  state: DartboardState,
+  action: CenterWedgeOperatorCycleActions
+): DartboardState {
+  const newWedgeOperatorFn =
+    action.type === "NEXT_CENTER_WEDGE_OPERATOR"
+      ? nextWedgeOperator
+      : previousWedgeOperator;
+  const possibleNewWedgeOperator = newWedgeOperatorFn(
+    state.center?.wedgeOperator || null
+  );
+  const newWedgeOperator = possibleNewWedgeOperator
+    ? possibleNewWedgeOperator
+    : newWedgeOperatorFn(null);
+  if (newWedgeOperator === null) {
+    console.error(
+      "Somehow we went from a null wedge operator to a null wedge operator. This shouldn't happen."
+    );
+  }
+  const newCenter = {
+    ...(state.center || {}),
+    operator: state.center ? state.center.operator : "square",
+    wedgeOperator: newWedgeOperator || "add",
+  };
+  return {
+    ...state,
+    center: newCenter,
+  };
+}
+
 export const reducer = (state: DartboardState, action: Actions) => {
   switch (action.type) {
     case "NEXT_WEDGE_OPERATOR":
     case "PREVIOUS_WEDGE_OPERATOR":
       return handleWedgeOperatorCycleAction(state, action);
+    case "NEXT_CENTER_OPERATOR":
+    case "PREVIOUS_CENTER_OPERATOR":
+      return handleCenterOperatorCycleAction(state, action);
+    case "NEXT_CENTER_WEDGE_OPERATOR":
+    case "PREVIOUS_CENTER_WEDGE_OPERATOR":
+      return handleCenterWedgeOperatorCycleAction(state, action);
     case "CLEAR":
       return initialState;
     default:

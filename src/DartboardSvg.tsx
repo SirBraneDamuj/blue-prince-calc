@@ -4,6 +4,8 @@ export type DartboardSvgProps = {
   wedges: Wedge[];
   center: Center | null;
   onWedgeSectionClick: (number: number, section: WedgeSection) => void;
+  onCenterRingClick: () => void;
+  onCenterClick: () => void;
 };
 
 const operatorColors: Record<WedgeOperator, string> = {
@@ -17,6 +19,8 @@ export function DartboardSvg({
   wedges,
   center,
   onWedgeSectionClick,
+  onCenterRingClick,
+  onCenterClick,
 }: DartboardSvgProps) {
   const numbers = [
     20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
@@ -46,7 +50,9 @@ export function DartboardSvg({
       onWedgeSectionClick(number - 1, section);
     };
 
-  const centerColor = "#666";
+  const centerColor = center?.operator
+    ? operatorColors[center.wedgeOperator]
+    : "#666";
   const wedgeComponents = numbers.map((number, index) => {
     const angle = numberAngles[index];
     return (
@@ -95,7 +101,7 @@ export function DartboardSvg({
     );
   });
   return (
-    <svg id="svg2" width={500} viewBox="-250 -250 500 500" version="1.0">
+    <svg id="svg2" width={800} viewBox="-250 -250 500 500" version="1.0">
       <defs id="defs6">
         <line
           id="refwire"
@@ -158,7 +164,53 @@ export function DartboardSvg({
             cx="0"
             r="16.4"
             fill={centerColor}
+            onClick={onCenterRingClick}
           />
+          <circle
+            id="circle219"
+            strokeWidth="3"
+            cy="0"
+            cx="0"
+            r="10"
+            onClick={onCenterClick}
+          />
+          <circle
+            id="circle219"
+            strokeWidth="0"
+            cy="0"
+            cx="0"
+            r="10"
+            fill={centerColor}
+            onClick={onCenterClick}
+          />
+          {center?.operator === "square" && (
+            <rect
+              id="rect222"
+              strokeWidth="1"
+              x="-5"
+              y="-5"
+              height="10"
+              width="10"
+              stroke={"#000"}
+              fillOpacity={0}
+              onClick={onCenterClick}
+            />
+          )}
+          {center?.operator === "flip" && (
+            <rect
+              id="rect222"
+              strokeWidth="1"
+              origin={"center"}
+              x="-5"
+              y="-5"
+              height="10"
+              width="10"
+              stroke={"#000"}
+              fillOpacity={0}
+              transform="rotate(45)"
+              onClick={onCenterClick}
+            />
+          )}
         </g>
       </g>
       <g
