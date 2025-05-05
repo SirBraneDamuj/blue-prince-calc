@@ -1,41 +1,42 @@
 import {
   Center,
   CenterOperator,
-  Wedge,
+  Section,
   WedgeOperator,
   WedgeSection,
 } from "./types";
 
 export type DartboardState = {
-  wedges: Wedge[];
+  sections: {
+    [key in WedgeSection]: Section;
+  };
   center: Center | null;
 };
 
-export const initialState = {
-  wedges: Array.from({ length: 20 }, () => ({
-    double: null,
-    outer: null,
-    triple: null,
-    inner: null,
-  })),
+export const initialState: DartboardState = {
+  sections: {
+    double: { type: "double", numbers: new Set(), operator: null },
+    outer: { type: "outer", numbers: new Set(), operator: null },
+    triple: { type: "triple", numbers: new Set(), operator: null },
+    inner: { type: "inner", numbers: new Set(), operator: null },
+  },
   center: null,
 };
 
-type WedgeOperatorCycleActions =
-  | {
-      type: "NEXT_WEDGE_OPERATOR";
-      payload: {
-        wedgeNumber: number;
-        wedgeSection: WedgeSection;
-      };
-    }
-  | {
-      type: "PREVIOUS_WEDGE_OPERATOR";
-      payload: {
-        wedgeNumber: number;
-        wedgeSection: WedgeSection;
-      };
-    };
+type SectionOperatorCycleActions = {
+  type: "NEXT_SECTION_OPERATOR" | "PREVIOUS_SECTION_OPERATOR";
+  payload: {
+    section: WedgeSection;
+  };
+};
+
+type ToggleSectionAction = {
+  type: "TOGGLE_SECTION";
+  payload: {
+    section: WedgeSection;
+    number: number;
+  };
+};
 
 type ClearAction = {
   type: "CLEAR";
@@ -50,7 +51,8 @@ type CenterWedgeOperatorCycleActions = {
 };
 
 export type Actions =
-  | WedgeOperatorCycleActions
+  | SectionOperatorCycleActions
+  | ToggleSectionAction
   | ClearAction
   | CenterOperatorCycleActions
   | CenterWedgeOperatorCycleActions;
@@ -129,24 +131,53 @@ function previousCenterOperator(
 
 function handleWedgeOperatorCycleAction(
   state: DartboardState,
-  action: WedgeOperatorCycleActions
+  action: SectionOperatorCycleActions
 ): DartboardState {
   const newWedgeOperatorFn =
-    action.type === "NEXT_WEDGE_OPERATOR"
+    action.type === "NEXT_SECTION_OPERATOR"
       ? nextWedgeOperator
       : previousWedgeOperator;
+  const currentSection = state.sections[action.payload.section];
+  const newWedgeOperator = newWedgeOperatorFn(currentSection.operator);
+  const newSection = {
+    ...currentSection,
+    operator: newWedgeOperator,
+  };
   return {
     ...state,
-    wedges: state.wedges.map((wedge, index) => {
-      if (index === action.payload.wedgeNumber) {
-        const newWedge = { ...wedge };
-        newWedge[action.payload.wedgeSection] = newWedgeOperatorFn(
-          wedge[action.payload.wedgeSection]
-        );
-        return newWedge;
-      }
-      return wedge;
-    }),
+    sections: {
+      ...state.sections,
+      [action.payload.section]: newSection,
+    },
+  };
+}
+
+function handleToggleSectionAction(
+  state: DartboardState,
+  action: ToggleSectionAction
+): DartboardState {
+  const { section, number } = action.payload;
+  const currentSection = state.sections[section];
+  const newNumbers = new Set(currentSection.numbers);
+
+  if (newNumbers.has(number)) {
+    newNumbers.delete(number);
+  } else {
+    newNumbers.add(number);
+  }
+
+  const newSection = {
+    ...currentSection,
+    numbers: newNumbers,
+    operator: currentSection.operator || "add",
+  };
+
+  return {
+    ...state,
+    sections: {
+      ...state.sections,
+      [section]: newSection,
+    },
   };
 }
 
@@ -159,7 +190,6 @@ function handleCenterOperatorCycleAction(
       ? nextCenterOperator
       : previousCenterOperator;
   const newCenterOperator = newCenterOperatorFn(state.center?.operator || null);
-  console.log(state.center?.operator, newCenterOperator);
   if (newCenterOperator === null) {
     return {
       ...state,
@@ -209,9 +239,11 @@ function handleCenterWedgeOperatorCycleAction(
 
 export const reducer = (state: DartboardState, action: Actions) => {
   switch (action.type) {
-    case "NEXT_WEDGE_OPERATOR":
-    case "PREVIOUS_WEDGE_OPERATOR":
+    case "NEXT_SECTION_OPERATOR":
+    case "PREVIOUS_SECTION_OPERATOR":
       return handleWedgeOperatorCycleAction(state, action);
+    case "TOGGLE_SECTION":
+      return handleToggleSectionAction(state, action);
     case "NEXT_CENTER_OPERATOR":
     case "PREVIOUS_CENTER_OPERATOR":
       return handleCenterOperatorCycleAction(state, action);

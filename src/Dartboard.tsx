@@ -2,19 +2,37 @@ import React, { useMemo, useReducer } from "react";
 import { computeValue } from "./calculator";
 import { DartboardSvg } from "./DartboardSvg";
 import { initialState, reducer } from "./reducer";
+import SectionControls from "./SectionControls";
 
 const Dartboard: React.FC = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { wedges, center } = state;
   function onWedgeSectionClick(
-    wedgeNumber: number,
-    wedgeSection: "double" | "outer" | "triple" | "inner"
+    number: number,
+    section: "double" | "outer" | "triple" | "inner"
   ) {
     dispatch({
-      type: "NEXT_WEDGE_OPERATOR",
-      payload: { wedgeNumber, wedgeSection },
+      type: "TOGGLE_SECTION",
+      payload: { number, section },
     });
   }
+
+  const handleNextOperator = (
+    section: "double" | "outer" | "triple" | "inner"
+  ) => {
+    dispatch({
+      type: "NEXT_SECTION_OPERATOR",
+      payload: { section },
+    });
+  };
+
+  const handlePreviousOperator = (
+    section: "double" | "outer" | "triple" | "inner"
+  ) => {
+    dispatch({
+      type: "PREVIOUS_SECTION_OPERATOR",
+      payload: { section },
+    });
+  };
   function onCenterClick() {
     dispatch({
       type: "NEXT_CENTER_OPERATOR",
@@ -26,33 +44,25 @@ const Dartboard: React.FC = () => {
     });
   }
   const value = useMemo(() => {
-    try {
-      return computeValue(state);
-    } catch (error) {
-      console.error("Error computing value:", error);
-      return -1;
-    }
+    return computeValue(state);
   }, [state]);
   return (
     <div>
-      <DartboardSvg
-        wedges={wedges}
-        center={center}
-        onWedgeSectionClick={onWedgeSectionClick}
-        onCenterClick={onCenterClick}
-        onCenterRingClick={onCenterRingClick}
-      />
-      <br />
-      <button
-        onClick={() =>
-          dispatch({
-            type: "CLEAR",
-          })
-        }
-      >
-        Clear
-      </button>
-      <h1>Value: {value}</h1>
+      <h1 className="h1">Value: {value}</h1>
+      <div className="flex items-center">
+        <DartboardSvg
+          state={state}
+          onWedgeSectionClick={onWedgeSectionClick}
+          onCenterClick={onCenterClick}
+          onCenterRingClick={onCenterRingClick}
+        />
+        <SectionControls
+          state={state}
+          onNextOperator={handleNextOperator}
+          onPreviousOperator={handlePreviousOperator}
+          onClear={() => dispatch({ type: "CLEAR" })}
+        />
+      </div>
     </div>
   );
 };

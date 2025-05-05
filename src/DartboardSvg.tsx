@@ -1,8 +1,8 @@
-import { Center, Wedge, WedgeOperator, WedgeSection } from "./types";
+import { DartboardState } from "./reducer";
+import { WedgeOperator, WedgeSection } from "./types";
 
 export type DartboardSvgProps = {
-  wedges: Wedge[];
-  center: Center | null;
+  state: DartboardState;
   onWedgeSectionClick: (number: number, section: WedgeSection) => void;
   onCenterRingClick: () => void;
   onCenterClick: () => void;
@@ -16,15 +16,14 @@ const operatorColors: Record<WedgeOperator, string> = {
 };
 
 export function DartboardSvg({
-  wedges,
-  center,
+  state,
   onWedgeSectionClick,
   onCenterRingClick,
   onCenterClick,
 }: DartboardSvgProps) {
+  const { sections, center } = state;
   const numbers = [
     20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6, 13, 4, 18, 1,
-    // 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
   ];
   const numberAngles = [
     0, 18, 36, 54, 72, 90, 108, 126, 144, 162, 180, 198, 216, 234, 252, 270,
@@ -34,13 +33,14 @@ export function DartboardSvg({
   function wedgeSectionColor(
     number: number,
     index: number,
-    section: WedgeSection
+    sectionType: WedgeSection
   ) {
-    const operator = wedges[number - 1][section];
-    if (operator) {
-      return operatorColors[operator];
+    console.log(number, index, sectionType);
+    const { type, numbers, operator } = sections[sectionType];
+    if (numbers?.has(number)) {
+      return operatorColors[operator as WedgeOperator];
     }
-    if (section === "double" || section === "triple") {
+    if (type === "double" || type === "triple") {
       return index % 2 === 0 ? "#aaa" : "#666";
     }
     return index % 2 === 0 ? "#000" : "#fff";
@@ -48,8 +48,7 @@ export function DartboardSvg({
 
   const wedgeSectionClickHandler =
     (number: number, section: WedgeSection) => () => {
-      console.log("clicked", number, section);
-      onWedgeSectionClick(number - 1, section);
+      onWedgeSectionClick(number, section);
     };
 
   const centerColor = center?.operator
